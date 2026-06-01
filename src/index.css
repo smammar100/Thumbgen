@@ -1,0 +1,164 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Silkscreen&display=swap');
+
+:root {
+  --app-bg: #f7f7f7;
+  --app-dots: rgba(0, 0, 0, 0.03);
+  --panel-bg: #ffffff;
+  --panel-text: #000000;
+  --panel-text-muted: #555555;
+  --panel-text-light: #9ca3af;
+  
+  --border-color: #e5e7eb;
+  --border-color-muted: #f3f4f6;
+  --control-accent: #ff0000;
+  
+  --input-bg: #ffffff;
+  --pill-bg-inactive: #f3f4f6;
+  --pill-text-inactive: #555555;
+  --pill-bg-active: #000000;
+  --pill-text-active: #ffffff;
+
+  --dropzone-bg-hover: rgba(0, 0, 0, 0.015);
+  --card-bg: #ffffff;
+  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.015);
+  --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.035);
+  
+  --indicator: #ff0000;
+  --slider-track: #e5e7eb;
+}
+
+.dark {
+  --app-bg: #050505;
+  --app-dots: rgba(255, 255, 255, 0.05);
+  --panel-bg: #0c0c0c;
+  --panel-text: #ffffff;
+  --panel-text-muted: #a3a3a3;
+  --panel-text-light: #525252;
+  
+  --border-color: #1c1c1c;
+  --border-color-muted: #111111;
+  --control-accent: #ff0000;
+  
+  --input-bg: #141414;
+  --pill-bg-inactive: #141414;
+  --pill-text-inactive: #a3a3a3;
+  --pill-bg-active: #ffffff;
+  --pill-text-active: #000000;
+
+  --dropzone-bg-hover: rgba(255, 255, 255, 0.02);
+  --card-bg: #121212;
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  --card-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.55);
+  
+  --indicator: #ff0000;
+  --slider-track: #1c1c1c;
+}
+
+@theme {
+  --color-app-bg: var(--app-bg);
+  --color-panel-bg: var(--panel-bg);
+  --color-panel-text: var(--panel-text);
+  --color-panel-text-muted: var(--panel-text-muted);
+  --color-panel-text-light: var(--panel-text-light);
+  --color-border-custom: var(--border-color);
+  --color-border-custom-muted: var(--border-color-muted);
+  --color-input-bg: var(--input-bg);
+  --color-pill-bg-inactive: var(--pill-bg-inactive);
+  --color-pill-text-inactive: var(--pill-text-inactive);
+  --color-pill-bg-active: var(--pill-bg-active);
+  --color-pill-text-active: var(--pill-text-active);
+  --color-card-bg: var(--card-bg);
+  --color-card-shadow: var(--card-shadow);
+  --color-card-shadow-hover: var(--card-shadow-hover);
+  --color-indicator: var(--indicator);
+
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: "Silkscreen", "Space Mono", monospace;
+  --font-mono: "Space Mono", monospace;
+}
+
+@layer base {
+  body {
+    background-color: var(--app-bg);
+    background-image: radial-gradient(var(--app-dots) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-attachment: fixed;
+    color: var(--panel-text);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    transition: background-color 0.25s ease, color 0.25s ease, background-image 0.25s ease;
+  }
+  
+  header, footer, aside, main, div, button, input {
+    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.15s ease, box-shadow 0.25s ease;
+  }
+}
+
+/* Scrollbar tweaks to keep it pristine */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom slider range styling for Nothing Red theme */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--slider-track);
+  border-radius: 9999px;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.25s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background-color: var(--indicator); /* Nothing signature red dot */
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  transition: transform 0.1s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background-color: var(--indicator);
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  transition: transform 0.1s ease;
+}
+
+input[type="moz-range-thumb"]::-moz-range-thumb:hover {
+  transform: scale(1.15);
+}
+
+/* Custom transition utility */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

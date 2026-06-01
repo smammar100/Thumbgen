@@ -1,0 +1,6 @@
+{
+  "name": "ThumbGen",
+  "description": "Local-first boutique image thumbnail generator with step-downscaling, aspect ratio cropper, custom anchors, quality controls, and ZIP export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
