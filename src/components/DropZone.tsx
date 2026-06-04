@@ -4,6 +4,7 @@
  */
 
 import React, { useRef, useState } from 'react';
+import { Plus } from '@phosphor-icons/react';
 
 interface DropZoneProps {
   onFilesAdded: (files: FileList) => void;
@@ -70,9 +71,7 @@ export default function DropZone({ onFilesAdded }: DropZoneProps) {
     >
       {/* Nothing dot design element helper layout */}
       <div className="w-12 h-12 bg-panel-text rounded-full flex items-center justify-center mb-4 border border-border-custom transition-transform duration-300 hover:scale-105 shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
-        <svg className="w-5 h-5 text-panel-bg" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
-        </svg>
+        <Plus size={20} weight="bold" className="text-panel-bg" />
       </div>
 
       <p className="text-sm font-semibold text-panel-text tracking-wide font-sans">

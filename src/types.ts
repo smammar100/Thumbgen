@@ -7,7 +7,7 @@ export type FormatMode = 'webp' | 'jpeg' | 'png';
 
 export type AspectRatioType = '1:1' | '16:9' | '4:3' | '3:4' | '40:21' | 'original';
 
-export type NamingMode = 'num' | 'prefix-original' | 'original';
+export type NamingMode = 'num' | 'prefix-original' | 'original' | 'custom';
 
 export interface ImageFileEntry {
   id: string;

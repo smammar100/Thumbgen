@@ -11,7 +11,7 @@ import ControlPanel from './components/ControlPanel';
 import PreviewGrid from './components/PreviewGrid';
 import { ImageFileEntry, FormatMode, AspectRatioType, NamingMode } from './types';
 import { buildZip } from './utils/zip';
-import { renderToCanvas, canvasToBlob, MIME_MAP, sanitizeName } from './utils/image';
+import { renderToCanvas, canvasToBlob, MIME_MAP, sanitizeName, generateFilename, getCropParams, getOutputDims } from './utils/image';
 
 export default function App() {
   const [files, setFiles] = useState<ImageFileEntry[]>([]);
@@ -25,6 +25,9 @@ export default function App() {
   const [processing, setProcessing] = useState<boolean>(false);
   const [status, setStatus] = useState<string>('');
   const [panelFormat, setPanelFormat] = useState<FormatMode>('webp');
+  const [customPattern, setCustomPattern] = useState<string>('{pfx}-{name}-{num}');
+  const [startCounter, setStartCounter] = useState<number>(1);
+  const [counterPadding, setCounterPadding] = useState<number>(2);
 
   // Theme support
   const [isDark, setIsDark] = useState<boolean>(() => {
@@ -152,10 +155,8 @@ export default function App() {
 
     try {
       const activePrefix = prefix.trim() || 'thumb';
-      const suffix = aspect === 'original' ? '' : `-${aspect.replace(':', 'x')}`;
       const today = new Date().toISOString().slice(0, 10);
       const mime = MIME_MAP[panelFormat as keyof typeof MIME_MAP] || 'image/webp';
-      const ext = panelFormat === 'jpeg' ? 'jpg' : panelFormat;
       const zipName = `${activePrefix}-${today}.zip`;
       const zipEntries: { name: string; blob: Blob }[] = [];
 
@@ -172,19 +173,29 @@ export default function App() {
         );
 
         const blob = await canvasToBlob(canvas, quality, mime);
-        const base = sanitizeName(entry.name);
-        const num = String(i + 1).padStart(2, '0');
         
-        let filename = '';
-        if (naming === 'original') {
-          filename = `${base}${suffix}.${ext}`;
-        } else if (naming === 'num') {
-          filename = `${activePrefix}-${num}${suffix}.${ext}`;
-        } else if (naming === 'prefix-original') {
-          filename = `${activePrefix}-${base}-${num}${suffix}.${ext}`;
-        } else {
-          filename = `${activePrefix}-${num}${suffix}.${ext}`;
-        }
+        const { sw, sh } = getCropParams(
+          entry.img.naturalWidth,
+          entry.img.naturalHeight,
+          aspect,
+          anchorX,
+          anchorY
+        );
+        const { w, h } = getOutputDims(sw, sh, maxWidth);
+
+        const filename = generateFilename({
+          originalName: entry.name,
+          index: i,
+          naming,
+          prefix,
+          customPattern,
+          startCounter,
+          counterPadding,
+          aspect,
+          format: panelFormat,
+          width: w,
+          height: h,
+        });
 
         zipEntries.push({ name: filename, blob });
       }
@@ -241,6 +252,12 @@ export default function App() {
             setPrefix={setPrefix}
             naming={naming}
             setNaming={setNaming}
+            customPattern={customPattern}
+            setCustomPattern={setCustomPattern}
+            startCounter={startCounter}
+            setStartCounter={setStartCounter}
+            counterPadding={counterPadding}
+            setCounterPadding={setCounterPadding}
           />
 
           {/* Decorative/Info Stencil Intro Block at sidebar bottom */}
@@ -278,6 +295,9 @@ export default function App() {
                   format={panelFormat}
                   prefix={prefix}
                   naming={naming}
+                  customPattern={customPattern}
+                  startCounter={startCounter}
+                  counterPadding={counterPadding}
                   onRemoveFile={handleRemoveFile}
                 />
               </div>

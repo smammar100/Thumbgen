@@ -5,8 +5,9 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ImageFileEntry, AspectRatioType } from '../types';
-import { getCropParams, getOutputDims, renderToCanvas, canvasToBlob, MIME_MAP, sanitizeName } from '../utils/image';
+import { DownloadSimple, Trash } from '@phosphor-icons/react';
+import { ImageFileEntry, AspectRatioType, NamingMode } from '../types';
+import { getCropParams, getOutputDims, renderToCanvas, canvasToBlob, MIME_MAP, sanitizeName, generateFilename } from '../utils/image';
 
 interface PreviewGridProps {
   files: ImageFileEntry[];
@@ -17,7 +18,10 @@ interface PreviewGridProps {
   quality: number;
   format: string;
   prefix: string;
-  naming: string;
+  naming: NamingMode;
+  customPattern: string;
+  startCounter: number;
+  counterPadding: number;
   onRemoveFile: (id: string) => void;
 }
 
@@ -31,29 +35,38 @@ export default function PreviewGrid({
   format,
   prefix,
   naming,
+  customPattern,
+  startCounter,
+  counterPadding,
   onRemoveFile,
 }: PreviewGridProps) {
 
   const handleSingleDownload = async (entry: ImageFileEntry, idx: number) => {
     try {
       const mime = MIME_MAP[format as keyof typeof MIME_MAP] || 'image/webp';
-      const ext = format === 'jpeg' ? 'jpg' : format;
-      const suffix = aspect === 'original' ? '' : `-${aspect.replace(':', 'x')}`;
-      const activePrefix = prefix.trim() || 'thumb';
-      const base = sanitizeName(entry.name);
       
-      const num = String(idx + 1).padStart(2, '0');
-      let filename = '';
+      const { sw, sh } = getCropParams(
+        entry.img.naturalWidth,
+        entry.img.naturalHeight,
+        aspect,
+        anchorX,
+        anchorY
+      );
+      const { w, h } = getOutputDims(sw, sh, maxWidth);
 
-      if (naming === 'original') {
-        filename = `${base}${suffix}.${ext}`;
-      } else if (naming === 'num') {
-        filename = `${activePrefix}-${num}${suffix}.${ext}`;
-      } else if (naming === 'prefix-original') {
-        filename = `${activePrefix}-${base}-${num}${suffix}.${ext}`;
-      } else {
-        filename = `${activePrefix}-${num}${suffix}.${ext}`;
-      }
+      const filename = generateFilename({
+        originalName: entry.name,
+        index: idx,
+        naming,
+        prefix,
+        customPattern,
+        startCounter,
+        counterPadding,
+        aspect,
+        format,
+        width: w,
+        height: h,
+      });
 
       const canvas = renderToCanvas(
         entry.img,
@@ -139,11 +152,9 @@ export default function PreviewGrid({
                     type="button"
                     onClick={() => handleSingleDownload(entry, idx)}
                     title="Download this thumbnail"
-                    className="p-1.5 bg-card-bg hover:bg-panel-text text-panel-text hover:text-panel-bg rounded-full border border-border-custom shadow-sm transition-all duration-155 scale-95 hover:scale-100 outline-none cursor-pointer"
+                    className="p-1.5 bg-card-bg hover:bg-panel-text text-panel-text hover:text-panel-bg rounded-full border border-border-custom shadow-sm transition-all duration-155 scale-95 hover:scale-100 outline-none cursor-pointer flex items-center justify-center"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-[15px] h-[15px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4 4m0 0L8 8m4 4V4" />
-                    </svg>
+                    <DownloadSimple size={15} weight="bold" />
                   </button>
 
                   {/* Trash single button */}
@@ -151,21 +162,48 @@ export default function PreviewGrid({
                     type="button"
                     onClick={() => onRemoveFile(entry.id)}
                     title="Remove image"
-                    className="p-1.5 bg-card-bg hover:bg-[#ff0000] text-panel-text hover:text-white rounded-full border border-border-custom shadow-sm transition-all duration-155 scale-95 hover:scale-100 outline-none cursor-pointer"
+                    className="p-1.5 bg-card-bg hover:bg-[#ff0000] text-panel-text hover:text-white rounded-full border border-border-custom shadow-sm transition-all duration-155 scale-95 hover:scale-100 outline-none cursor-pointer flex items-center justify-center"
                   >
-                    <svg className="w-[15px] h-[15px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
+                    <Trash size={15} weight="bold" />
                   </button>
                 </div>
               </div>
 
               {/* Description Details Card Footer */}
-              <div className="p-4 bg-card-bg select-none border-t border-border-custom-muted">
-                <p className="text-xs font-bold text-panel-text truncate tracking-wide" title={entry.name}>
-                  {entry.name}
-                </p>
-                <div className="flex justify-between items-center mt-2">
+              <div className="p-4 bg-card-bg select-none border-t border-border-custom-muted flex flex-col gap-1.5">
+                <div>
+                  <p className="text-xs font-bold text-panel-text truncate tracking-wide" title={entry.name}>
+                    {entry.name}
+                  </p>
+                  <p className="text-[10px] text-panel-text-muted truncate font-mono mt-0.5 tracking-tight" title={generateFilename({
+                    originalName: entry.name,
+                    index: idx,
+                    naming,
+                    prefix,
+                    customPattern,
+                    startCounter,
+                    counterPadding,
+                    aspect,
+                    format,
+                    width: w,
+                    height: h,
+                  })}>
+                    {generateFilename({
+                      originalName: entry.name,
+                      index: idx,
+                      naming,
+                      prefix,
+                      customPattern,
+                      startCounter,
+                      counterPadding,
+                      aspect,
+                      format,
+                      width: w,
+                      height: h,
+                    })}
+                  </p>
+                </div>
+                <div className="flex justify-between items-center mt-1">
                   <span className="text-[10px] text-panel-text-light font-bold font-mono">
                     {w} &times; {h} PX
                   </span>

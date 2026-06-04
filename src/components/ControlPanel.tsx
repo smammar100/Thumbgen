@@ -5,6 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { FormatMode, AspectRatioType, NamingMode } from '../types';
+import { generateFilename } from '../utils/image';
 
 interface ControlPanelProps {
   format: FormatMode;
@@ -22,6 +23,12 @@ interface ControlPanelProps {
   setPrefix: (p: string) => void;
   naming: NamingMode;
   setNaming: (n: NamingMode) => void;
+  customPattern: string;
+  setCustomPattern: (p: string) => void;
+  startCounter: number;
+  setStartCounter: (c: number) => void;
+  counterPadding: number;
+  setCounterPadding: (pad: number) => void;
 }
 
 const ASPECT_OPTIONS: { label: string; value: AspectRatioType }[] = [
@@ -61,6 +68,12 @@ export default function ControlPanel({
   setPrefix,
   naming,
   setNaming,
+  customPattern,
+  setCustomPattern,
+  startCounter,
+  setStartCounter,
+  counterPadding,
+  setCounterPadding,
 }: ControlPanelProps) {
   const [localWidth, setLocalWidth] = useState(maxWidth.toString());
 
@@ -88,18 +101,19 @@ export default function ControlPanel({
   };
 
   const getExampleFilename = () => {
-    const activePrefix = prefix.trim() || 'thumb';
-    const suffix = aspect === 'original' ? '' : `-${aspect.replace(':', 'x')}`;
-    const ext = format === 'jpeg' ? 'jpg' : format;
-
-    if (naming === 'original') {
-      return `image${suffix}.${ext}`;
-    } else if (naming === 'num') {
-      return `${activePrefix}-01${suffix}.${ext}`;
-    } else if (naming === 'prefix-original') {
-      return `${activePrefix}-image-01${suffix}.${ext}`;
-    }
-    return `image.${ext}`;
+    return generateFilename({
+      originalName: 'image',
+      index: 0,
+      naming,
+      prefix,
+      customPattern,
+      startCounter,
+      counterPadding,
+      aspect,
+      format,
+      width: aspect === 'original' ? 1920 : maxWidth,
+      height: aspect === 'original' ? 1080 : Math.round(maxWidth * (9/16)),
+    });
   };
 
   return (
@@ -236,23 +250,24 @@ export default function ControlPanel({
         <h3 className="text-[10px] font-bold text-panel-text-light uppercase tracking-widest mb-3 font-mono">
           [06] Naming Rules
         </h3>
-        <div className="flex bg-pill-bg-inactive p-1 rounded-xl mb-3.5">
-          {(['num', 'prefix-original', 'original'] as NamingMode[]).map((mode) => {
+        <div className="grid grid-cols-2 gap-1.5 mb-3.5">
+          {(['num', 'prefix-original', 'original', 'custom'] as NamingMode[]).map((mode) => {
             const isActive = naming === mode;
-            let text = '#';
-            if (mode === 'num') text = 'Pfx + #';
+            let text = '';
+            if (mode === 'num') text = 'Pfx + Num';
             else if (mode === 'prefix-original') text = 'Pfx + Name';
             else if (mode === 'original') text = 'Original';
+            else if (mode === 'custom') text = 'Custom';
 
             return (
               <button
                 key={mode}
                 type="button"
                 onClick={() => setNaming(mode)}
-                className={`flex-1 py-1.5 text-[9px] font-bold rounded-lg transition-all text-center truncate ${
+                className={`py-1.5 text-[10px] font-bold rounded-lg border transition-all duration-200 outline-none flex items-center justify-center ${
                   isActive
-                    ? 'bg-pill-bg-active text-pill-text-active shadow-sm cursor-default'
-                    : 'text-panel-text-muted hover:text-panel-text hover:bg-panel-bg/30 cursor-pointer'
+                    ? 'border-panel-text bg-pill-bg-active text-pill-text-active shadow-sm font-bold'
+                    : 'border-border-custom hover:border-panel-text text-panel-text-muted hover:bg-pill-bg-inactive cursor-pointer'
                 }`}
               >
                 {text}
@@ -260,6 +275,38 @@ export default function ControlPanel({
             );
           })}
         </div>
+
+        {/* Custom pattern fields shown if custom */}
+        {naming === 'custom' && (
+          <div className="flex flex-col gap-1.5 animate-fadeIn mb-3.5">
+            <label className="text-[9px] text-panel-text-light font-bold uppercase tracking-wider font-mono" htmlFor="sidebar_pattern_input">
+              Pattern Layout
+            </label>
+            <input
+              type="text"
+              id="sidebar_pattern_input"
+              value={customPattern}
+              onChange={(e) => setCustomPattern(e.target.value)}
+              placeholder="{pfx}-{name}-{num}"
+              className="w-full px-3 py-1.5 border border-border-custom bg-input-bg text-panel-text rounded-xl text-xs font-semibold focus:ring-1 focus:ring-panel-text focus:border-panel-text outline-none transition-all font-mono"
+            />
+            
+            {/* Quick insert tokens */}
+            <div className="flex flex-wrap gap-1 mt-1 justify-start">
+              {['{pfx}', '{num}', '{name}', '{date}', '{ratio}', '{w}', '{h}'].map((token) => (
+                <button
+                  key={token}
+                  type="button"
+                  onClick={() => setCustomPattern(customPattern + token)}
+                  title={`Insert ${token}`}
+                  className="px-1.5 py-0.5 text-[8px] font-mono font-extrabold text-panel-text-light bg-pill-bg-inactive hover:bg-border-custom rounded hover:text-panel-text transition-all cursor-pointer border border-border-custom-muted"
+                >
+                  {token}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Prefix Input box */}
         {naming !== 'original' && (
@@ -275,6 +322,39 @@ export default function ControlPanel({
               placeholder="thumb"
               className="w-full px-3.5 py-2 border border-border-custom bg-input-bg text-panel-text rounded-xl text-xs font-semibold focus:ring-1 focus:ring-panel-text focus:border-panel-text outline-none transition-all font-mono"
             />
+          </div>
+        )}
+
+        {/* Custom Start counter / Counter padding settings */}
+        {naming !== 'original' && (
+          <div className="grid grid-cols-2 gap-3 mb-3.5">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] text-panel-text-light font-bold uppercase tracking-wider font-mono">
+                Start index
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={startCounter}
+                onChange={(e) => setStartCounter(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                className="w-full px-3 py-1.5 border border-border-custom bg-input-bg text-panel-text rounded-xl text-xs font-semibold focus:ring-1 focus:ring-panel-text focus:border-panel-text outline-none transition-all font-mono"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] text-panel-text-light font-bold uppercase tracking-wider font-mono">
+                padding digits
+              </label>
+              <select
+                value={counterPadding}
+                onChange={(e) => setCounterPadding(parseInt(e.target.value, 10))}
+                className="w-full px-3 py-1.5 border border-border-custom bg-input-bg text-panel-text rounded-xl text-xs font-semibold focus:ring-1 focus:ring-panel-text focus:border-panel-text outline-none transition-all font-mono cursor-pointer"
+              >
+                <option value={1}>1 (e.g. 1)</option>
+                <option value={2}>2 (e.g. 01)</option>
+                <option value={3}>3 (e.g. 001)</option>
+                <option value={4}>4 (e.g. 0001)</option>
+              </select>
+            </div>
           </div>
         )}
 

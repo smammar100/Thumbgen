@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AspectRatioType } from '../types';
+import { AspectRatioType, NamingMode } from '../types';
 
 export const MIME_MAP = {
   webp: 'image/webp',
@@ -163,4 +163,75 @@ export function sanitizeName(name: string): string {
       .replace(/\s+/g, '-') // replace spaces with -
       .trim() || 'image'
   );
+}
+
+interface FilenameParams {
+  originalName: string;
+  index: number;
+  naming: NamingMode;
+  prefix: string;
+  customPattern: string;
+  startCounter: number;
+  counterPadding: number;
+  aspect: AspectRatioType;
+  format: string;
+  width: number;
+  height: number;
+}
+
+export function generateFilename({
+  originalName,
+  index,
+  naming,
+  prefix,
+  customPattern,
+  startCounter,
+  counterPadding,
+  aspect,
+  format,
+  width,
+  height,
+}: FilenameParams): string {
+  const ext = format === 'jpeg' ? 'jpg' : format;
+  const suffix = aspect === 'original' ? '' : `-${aspect.replace(':', 'x')}`;
+  const base = sanitizeName(originalName);
+  const activePrefix = prefix.trim() || 'thumb';
+
+  const currentNum = startCounter + index;
+  const numStr = String(currentNum).padStart(counterPadding, '0');
+
+  if (naming === 'original') {
+    return `${base}${suffix}.${ext}`;
+  } else if (naming === 'num') {
+    return `${activePrefix}-${numStr}${suffix}.${ext}`;
+  } else if (naming === 'prefix-original') {
+    return `${activePrefix}-${base}-${numStr}${suffix}.${ext}`;
+  } else if (naming === 'custom') {
+    const today = new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const padTime = (n: number) => String(n).padStart(2, '0');
+    const timeStr = `${padTime(now.getHours())}${padTime(now.getMinutes())}${padTime(now.getSeconds())}`;
+    
+    const ratioStr = aspect === 'original' ? 'orig' : aspect.replace(':', 'x');
+
+    let result = customPattern;
+    result = result
+      .replace(/{pfx}/gi, activePrefix)
+      .replace(/{num}/gi, numStr)
+      .replace(/{name}/gi, base)
+      .replace(/{date}/gi, today)
+      .replace(/{time}/gi, timeStr)
+      .replace(/{w}/gi, String(width))
+      .replace(/{h}/gi, String(height))
+      .replace(/{ratio}/gi, ratioStr);
+
+    // Filter out invalid characters in filename (keep dots, dashes, underscores, spaces)
+    result = result.replace(/[\\/:*?"<>|]+/g, '_');
+
+    if (!result.toLowerCase().endsWith(`.${ext}`)) {
+      return `${result}.${ext}`;
+    }
+    return result;
+  }
+  return `${activePrefix}-${numStr}${suffix}.${ext}`;
 }

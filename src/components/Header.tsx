@@ -4,6 +4,8 @@
  */
 
 import React from 'react';
+import StarOnGithub from '@/components/ui/button-github';
+import { Sun, Moon } from '@phosphor-icons/react';
 
 interface HeaderProps {
   isDark: boolean;
@@ -35,17 +37,7 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 text-xs font-mono text-panel-text-muted">
-        <span className="hidden sm:inline-flex items-center gap-1.5">
-          ENGINE: <span className="text-panel-text font-bold tracking-wider">LOCAL</span>
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff0000] opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#ff0000]"></span>
-          </span>
-        </span>
-        
-        <div className="hidden sm:block h-3 w-px bg-border-custom"></div>
-
+      <div className="flex items-center gap-3 text-xs font-mono text-panel-text-muted">
         {/* Dynamic Light/Dark switch styled exactly like a tactile mechanical toggle */}
         <button
           type="button"
@@ -54,19 +46,27 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps) {
           className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border-custom hover:border-panel-text bg-input-bg text-panel-text hover:text-panel-text transition-all duration-200 text-[9px] font-mono tracking-widest font-bold cursor-pointer select-none active:scale-95 outline-none"
         >
           <span>THEME:</span>
-          <span className="text-panel-text font-extrabold flex items-center gap-1">
-            {isDark ? 'DARK' : 'LIGHT'}
-            <span className={`w-1.5 h-1.5 rounded-full ${isDark ? 'bg-[#ff0000]' : 'bg-panel-text'}`} />
+          <span className="text-panel-text font-extrabold flex items-center gap-1.5 select-none">
+            {isDark ? (
+              <>
+                <Moon size={12} weight="fill" className="text-panel-text" />
+                <span>DARK</span>
+              </>
+            ) : (
+              <>
+                <Sun size={12} weight="bold" className="text-panel-text" />
+                <span>LIGHT</span>
+              </>
+            )}
           </span>
         </button>
 
         <div className="hidden sm:block h-3 w-px bg-border-custom"></div>
-        <span className="flex items-center gap-1">
-          SESSION: 
-          <span className="text-panel-text bg-pill-bg-inactive px-1.5 py-0.5 rounded font-bold border border-border-custom text-[10px]">
-            TG-8821
-          </span>
-        </span>
+
+        {/* GitHub Star Button */}
+        <div className="scale-90 hover:scale-[0.93] transition-transform duration-200">
+          <StarOnGithub />
+        </div>
       </div>
     </header>
   );
